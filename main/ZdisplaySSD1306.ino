@@ -64,6 +64,7 @@ void setupSSD1306() {
   Log.trace(F("ZdisplaySSD1306 json-lcd: %T" CR), jsonDisplay);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), DISPLAY_IDLE_LOGO);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_SLEEP: %T" CR), DISPLAY_IDLE_SLEEP);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
 
@@ -101,6 +102,13 @@ void loopSSD1306() {
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
     }
   }
+  
+#  if DISPLAY_IDLE_SLEEP
+  if (uptime() > nextDisplayPage + 1) {
+    Oled.displayOff();
+  }
+#  endif
+
   /*
   Display logo if it has been more than DISPLAY_PAGE_INTERVAL
   */
@@ -525,11 +533,32 @@ void OledSerial::flush(void) {
 }
 
 /*
+Turn off the display
+*/
+void OledSerial::displayOff() {
+  if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+    display->displayOff();
+    xSemaphoreGive(semaphoreOLEDOperation);
+  }
+}
+
+/*
+Turn on the display
+*/
+void OledSerial::displayOn() {
+  if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+    display->displayOn();
+    xSemaphoreGive(semaphoreOLEDOperation);
+  }
+}
+
+/*
 Erase display and paint it with the color.  Used to 
 */
 void OledSerial::fillScreen(OLEDDISPLAY_COLOR color) {
   if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
     display->clear();
+    display->displayOn();
     display->setColor(color);
     display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
     xSemaphoreGive(semaphoreOLEDOperation);
@@ -544,6 +573,7 @@ size_t OledSerial::write(const uint8_t* buffer, size_t size) {
     if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       display->clear();
+      display->displayOn();
       display->setColor(WHITE);
       display->setFont(ArialMT_Plain_10);
       while (size) {
@@ -568,6 +598,7 @@ boolean OledSerial::displayPage(displayQueueMessage* message) {
   if (xPortGetCoreID() == CONFIG_ARDUINO_RUNNING_CORE) {
     if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
       display->clear();
+      display->displayOn();
       display->setColor(WHITE);
       display->setFont(ArialMT_Plain_10);
       display->drawString(0, 0, message->title);
@@ -613,6 +644,8 @@ void OledSerial::drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1
     int circle3X = circle1X - (logoSize * 0.13);
     int circle2X = circle1X - (logoSize * 1.05);
     int circle2Y = circle1Y - (logoSize * 0.8);
+
+    display->displayOn();
 
     if (line1) {
       display->setColor(BLACK);

@@ -62,6 +62,10 @@
 #  define DISPLAY_IDLE_LOGO false // Display the OMG logo when idle
 #endif
 
+#ifndef DISPLAY_IDLE_SLEEP
+#  define DISPLAY_IDLE_SLEEP true // Disable the display when idle
+#endif
+
 #ifndef DISPLAY_METRIC
 #  define DISPLAY_METRIC true // Units used for display of sensor data
 #endif
@@ -150,6 +154,9 @@ public:
   int peek(void); // Dummy functions
   int read(void); // Dummy functions
   void flush(void); // Dummy functions
+
+  void displayOff(void);   // turn off display out
+  void displayOn(void);   // turn on display out
 
   void fillScreen(OLEDDISPLAY_COLOR); // fillScreen display and set color
 
