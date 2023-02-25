@@ -651,54 +651,6 @@ void OledSerial::drawLogo() {
     display->drawString(32, 32, "penMQTTGateway");
 
     display->displayOn();
-
-    if (line1) {
-      display->setColor(BLACK);
-      display->drawLine(circle1X - 2, circle1Y, circle2X - 2, circle2Y);
-      display->drawLine(circle1X - 1, circle1Y, circle2X - 1, circle2Y);
-      display->drawLine(circle1X, circle1Y, circle2X, circle2Y);
-      display->drawLine(circle1X + 1, circle1Y, circle2X + 1, circle2Y);
-      display->drawLine(circle1X + 2, circle1Y, circle2X + 2, circle2Y);
-      display->setColor(WHITE);
-      display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
-    }
-    if (line2) {
-      display->setColor(BLACK);
-      display->drawLine(circle1X - 2, circle1Y, circle3X - 2, circle3Y);
-      display->drawLine(circle1X - 1, circle1Y, circle3X - 1, circle3Y);
-      display->drawLine(circle1X, circle1Y, circle3X, circle3Y);
-      display->drawLine(circle1X + 1, circle1Y, circle3X + 1, circle3Y);
-      display->setColor(WHITE);
-      display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
-    }
-    if (circle1) {
-      display->setColor(WHITE);
-      display->fillCircle(circle1X, circle1Y, logoSize / 2); // , WHITE);
-      display->setColor(BLACK);
-      display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T); // , TFT_GREEN);
-      display->setColor(WHITE);
-      display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2); // , WHITE);
-    }
-    if (circle2) {
-      display->setColor(WHITE);
-      display->fillCircle(circle2X, circle2Y, logoSize / 3); // , WHITE);
-      display->setColor(BLACK);
-      display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T); // , TFT_ORANGE);
-      display->setColor(WHITE);
-      display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
-    }
-    if (circle3) {
-      display->setColor(WHITE);
-      display->fillCircle(circle3X, circle3Y, logoSize / 4); // , WHITE);
-      display->setColor(BLACK);
-      display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T); // , TFT_PINK);
-      display->setColor(WHITE);
-      display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
-    }
-    if (name) {
-      display->setColor(BLACK);
-      display->drawString(circle1X + (circle1X * 0.27), circle1Y, "penMQTTGateway");
-    }
     display->display();
     delay(50);
     xSemaphoreGive(semaphoreOLEDOperation);
