@@ -53,6 +53,10 @@ unsigned long timer_sys_measures = 0;
 #include <ArduinoLog.h>
 #include <PubSubClient.h>
 
+#if defined(ENABLE_ESP32_WDT)
+# include <esp_task_wdt.h>
+#endif
+
 #include <string>
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
@@ -922,6 +926,13 @@ void setup() {
   serializeJson(modules, jsonChar, measureJson(modules) + 1);
   Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
 #endif
+
+#if defined(ENABLE_ESP32_WDT)
+Log.notice(F("Enabling ESP32 WDT at:  %d seconds" CR), WDT_TIMEOUT);
+  esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
+  esp_task_wdt_add(NULL); //add current thread to WDT watch
+#endif
+
   Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
 }
 
@@ -1478,6 +1489,8 @@ void loop() {
     timer_led_measures = millis();
     InfoIndicatorOFF();
     SendReceiveIndicatorOFF();
+    // Reset ESP32 WDT
+    esp_task_wdt_reset();
   }
 
 #if defined(ESP8266) || defined(ESP32)

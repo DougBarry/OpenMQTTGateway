@@ -64,6 +64,8 @@ void setupSSD1306() {
   Log.trace(F("ZdisplaySSD1306 json-lcd: %T" CR), jsonDisplay);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), DISPLAY_IDLE_LOGO);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_SLEEP: %T" CR), DISPLAY_IDLE_SLEEP);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_SLEEP_TIMEOUT: %d" CR), DISPLAY_SLEEP_TIMEOUT);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
 
@@ -101,6 +103,13 @@ void loopSSD1306() {
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
     }
   }
+  
+#  if DISPLAY_IDLE_SLEEP
+  if (uptime() > nextDisplayPage + DISPLAY_SLEEP_TIMEOUT) {
+    Oled.displayOff();
+  }
+#  endif
+
   /*
   Display logo if it has been more than DISPLAY_PAGE_INTERVAL
   */
@@ -525,11 +534,32 @@ void OledSerial::flush(void) {
 }
 
 /*
+Turn off the display
+*/
+void OledSerial::displayOff() {
+  if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+    display->displayOff();
+    xSemaphoreGive(semaphoreOLEDOperation);
+  }
+}
+
+/*
+Turn on the display
+*/
+void OledSerial::displayOn() {
+  if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
+    display->displayOn();
+    xSemaphoreGive(semaphoreOLEDOperation);
+  }
+}
+
+/*
 Erase display and paint it with the color.  Used to 
 */
 void OledSerial::fillScreen(OLEDDISPLAY_COLOR color) {
   if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
     display->clear();
+    display->displayOn();
     display->setColor(color);
     display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
     xSemaphoreGive(semaphoreOLEDOperation);
@@ -544,6 +574,7 @@ size_t OledSerial::write(const uint8_t* buffer, size_t size) {
     if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
       nextDisplayPage = uptime() + DISPLAY_PAGE_INTERVAL;
       display->clear();
+      display->displayOn();
       display->setColor(WHITE);
       display->setFont(ArialMT_Plain_10);
       while (size) {
@@ -568,6 +599,7 @@ boolean OledSerial::displayPage(displayQueueMessage* message) {
   if (xPortGetCoreID() == CONFIG_ARDUINO_RUNNING_CORE) {
     if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
       display->clear();
+      display->displayOn();
       display->setColor(WHITE);
       display->setFont(ArialMT_Plain_10);
       display->drawString(0, 0, message->title);
@@ -618,6 +650,55 @@ void OledSerial::drawLogo() {
     display->setColor(BLACK);
     display->drawString(32, 32, "penMQTTGateway");
 
+    display->displayOn();
+
+    if (line1) {
+      display->setColor(BLACK);
+      display->drawLine(circle1X - 2, circle1Y, circle2X - 2, circle2Y);
+      display->drawLine(circle1X - 1, circle1Y, circle2X - 1, circle2Y);
+      display->drawLine(circle1X, circle1Y, circle2X, circle2Y);
+      display->drawLine(circle1X + 1, circle1Y, circle2X + 1, circle2Y);
+      display->drawLine(circle1X + 2, circle1Y, circle2X + 2, circle2Y);
+      display->setColor(WHITE);
+      display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
+    }
+    if (line2) {
+      display->setColor(BLACK);
+      display->drawLine(circle1X - 2, circle1Y, circle3X - 2, circle3Y);
+      display->drawLine(circle1X - 1, circle1Y, circle3X - 1, circle3Y);
+      display->drawLine(circle1X, circle1Y, circle3X, circle3Y);
+      display->drawLine(circle1X + 1, circle1Y, circle3X + 1, circle3Y);
+      display->setColor(WHITE);
+      display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
+    }
+    if (circle1) {
+      display->setColor(WHITE);
+      display->fillCircle(circle1X, circle1Y, logoSize / 2); // , WHITE);
+      display->setColor(BLACK);
+      display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T); // , TFT_GREEN);
+      display->setColor(WHITE);
+      display->fillCircle(circle1X, circle1Y, logoSize / 2 - circle1T * 2); // , WHITE);
+    }
+    if (circle2) {
+      display->setColor(WHITE);
+      display->fillCircle(circle2X, circle2Y, logoSize / 3); // , WHITE);
+      display->setColor(BLACK);
+      display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T); // , TFT_ORANGE);
+      display->setColor(WHITE);
+      display->fillCircle(circle2X, circle2Y, logoSize / 3 - circle2T * 2); // , WHITE);
+    }
+    if (circle3) {
+      display->setColor(WHITE);
+      display->fillCircle(circle3X, circle3Y, logoSize / 4); // , WHITE);
+      display->setColor(BLACK);
+      display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T); // , TFT_PINK);
+      display->setColor(WHITE);
+      display->fillCircle(circle3X, circle3Y, logoSize / 4 - circle3T * 2); // , WHITE);
+    }
+    if (name) {
+      display->setColor(BLACK);
+      display->drawString(circle1X + (circle1X * 0.27), circle1Y, "penMQTTGateway");
+    }
     display->display();
     delay(50);
     xSemaphoreGive(semaphoreOLEDOperation);
