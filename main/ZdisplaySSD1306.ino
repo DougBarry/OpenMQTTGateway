@@ -65,6 +65,7 @@ void setupSSD1306() {
   Log.trace(F("ZdisplaySSD1306 DISPLAY_PAGE_INTERVAL: %d" CR), DISPLAY_PAGE_INTERVAL);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_LOGO: %T" CR), DISPLAY_IDLE_LOGO);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_IDLE_SLEEP: %T" CR), DISPLAY_IDLE_SLEEP);
+  Log.trace(F("ZdisplaySSD1306 DISPLAY_SLEEP_TIMEOUT: %d" CR), DISPLAY_SLEEP_TIMEOUT);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_METRIC: %T" CR), displayMetric);
   Log.trace(F("ZdisplaySSD1306 DISPLAY_FLIP: %T" CR), displayFlip);
 
@@ -104,7 +105,7 @@ void loopSSD1306() {
   }
   
 #  if DISPLAY_IDLE_SLEEP
-  if (uptime() > nextDisplayPage + 1) {
+  if (uptime() > nextDisplayPage + DISPLAY_SLEEP_TIMEOUT) {
     Oled.displayOff();
   }
 #  endif
