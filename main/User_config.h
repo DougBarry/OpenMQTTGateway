@@ -605,6 +605,12 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #  define LOG_LEVEL LOG_LEVEL_NOTICE
 #endif
 
+/*------------------ESP 32 WDT ----------------------------*/
+#ifndef ENABLE_ESP32_WDT
+#   define ENABLE_ESP32_WDT
+#   define WDT_TIMEOUT 30
+#endif
+
 /*-----------PLACEHOLDERS FOR OLED/LCD DISPLAY--------------*/
 // The real definitions are in config_M5.h / config_SSD1306.h
 #define pubOled(...)        // display the published message onto the OLED display
