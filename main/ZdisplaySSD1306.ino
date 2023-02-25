@@ -116,7 +116,7 @@ void loopSSD1306() {
 #  if DISPLAY_IDLE_LOGO
   if (uptime() > nextDisplayPage + 1 && !logoDisplayed) {
     Oled.fillScreen(WHITE);
-    Oled.drawLogo((int)OLED_WIDTH * 0.24, (int)(OLED_WIDTH / 2) - OLED_WIDTH * 0.2, (int)(OLED_HEIGHT / 2) + OLED_HEIGHT * 0.2, true, true, true, true, true, true); // Name
+    Oled.drawLogo();
     logoDisplayed = true;
   } else {
     logoDisplayed = false;
@@ -504,7 +504,7 @@ void OledSerial::begin() {
   display->setColor(WHITE);
   display->fillRect(0, 0, OLED_WIDTH, OLED_HEIGHT);
   display->display();
-  ssd1306Intro(OLED_WIDTH * 0.24, (OLED_WIDTH / 2) - OLED_WIDTH * 0.2, (OLED_HEIGHT / 2) + OLED_HEIGHT * 0.2);
+  drawLogo();
   display->setLogBuffer(OLED_TEXT_ROWS, OLED_TEXT_BUFFER);
   delay(1000);
 }
@@ -620,31 +620,35 @@ boolean OledSerial::displayPage(displayQueueMessage* message) {
 }
 
 /*
-Display Animated OpenMQTTGateway logo, used on inital boot 
-- borrowed from ZboardM5.ino and tweaked for ssd1306 display ( removed color and tweaked size/location )
-*/
-void OledSerial::ssd1306Intro(int scale, int displayWidth, int displayHeight) {
-  drawLogo(scale, displayWidth, displayHeight, false, true, false, false, false, false); // Circle 2
-  drawLogo(scale, displayWidth, displayHeight, false, false, true, false, false, false); // Circle 3
-  drawLogo(scale, displayWidth, displayHeight, false, true, true, true, false, false); // Line 1
-  drawLogo(scale, displayWidth, displayHeight, false, true, true, false, true, false); // Line 2
-  drawLogo(scale, displayWidth, displayHeight, true, true, true, true, true, false); // Circle 1
-  drawLogo(scale, displayWidth, displayHeight, true, true, true, true, true, true); // Name
-}
-
-/*
 Primitives behind OpenMQTTGateway logo
 */
-void OledSerial::drawLogo(int logoSize, int circle1X, int circle1Y, bool circle1, bool circle2, bool circle3, bool line1, bool line2, bool name) {
+void OledSerial::drawLogo() {
   if (xSemaphoreTake(semaphoreOLEDOperation, pdMS_TO_TICKS(30000)) == pdTRUE) {
-    int circle1T = logoSize / 15;
-    int circle2T = logoSize / 25;
-    int circle3T = logoSize / 30;
+    display->setColor(BLACK);
 
-    int circle3Y = circle1Y - (logoSize * 1.2);
-    int circle3X = circle1X - (logoSize * 0.13);
-    int circle2X = circle1X - (logoSize * 1.05);
-    int circle2Y = circle1Y - (logoSize * 0.8);
+    // line 1
+    display->drawLine(15, 28, 20, 31);
+    display->drawLine(15, 29, 20, 32);
+    // line 2
+    display->drawLine(25, 29, 22, 21);
+    display->drawLine(26, 29, 23, 21);
+    // circle 1
+    display->fillCircle(25, 35, 7);
+    display->setColor(WHITE);
+    display->fillCircle(25, 35, 5);
+    // circle 2
+    display->setColor(BLACK);
+    display->fillCircle(23, 18, 4);
+    display->setColor(WHITE);
+    display->fillCircle(23, 18, 2);
+    // circle 3
+    display->setColor(BLACK);
+    display->fillCircle(11, 25, 5);
+    display->setColor(WHITE);
+    display->fillCircle(11, 25, 3);
+    // name
+    display->setColor(BLACK);
+    display->drawString(32, 32, "penMQTTGateway");
 
     display->displayOn();
 
