@@ -610,5 +610,6 @@ CRGB leds2[FASTLED_IND_NUM_LEDS];
 #define pubOled(...)        // display the published message onto the OLED display
 #define displayPrint(...)   // only print if not in low power mode
 #define lpDisplayPrint(...) // print in low power mode
+#define DISPLAY_SLEEP_TIMEOUT 10    // seconds before the display sleeps
 
 #endif

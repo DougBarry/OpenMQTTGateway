@@ -104,7 +104,7 @@ void loopSSD1306() {
   }
   
 #  if DISPLAY_IDLE_SLEEP
-  if (uptime() > nextDisplayPage + 1) {
+  if (uptime() > nextDisplayPage + DISPLAY_SLEEP_TIMEOUT) {
     Oled.displayOff();
   }
 #  endif
